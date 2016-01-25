@@ -200,7 +200,7 @@ function npcscan.on_event()
 		end
 		
 		do
-			local glow = button:CreateTexture(nil, 'OVERLAY')
+			local glow = button.model:CreateTexture(nil, 'OVERLAY')
 			button.glow = glow
 			glow:SetPoint('CENTER', button, 'CENTER')
 			glow:SetWidth(400 / 300 * button:GetWidth())
