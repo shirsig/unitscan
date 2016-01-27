@@ -22,8 +22,11 @@ do
 	
 	function npcscan.play_sound()
 		if not last_played or GetTime() - last_played > 10 then -- 8
-			PlaySoundFile('Interface\\AddOns\\npcscan\\Event_wardrum_ogre.ogg', 'Master')
-			PlaySoundFile('Interface\\AddOns\\npcscan\\scourge_horn.ogg', 'Master')
+		    local orig = GetCVar('MasterSoundEffects')
+			SetCVar('MasterSoundEffects', 0)
+			SetCVar('MasterSoundEffects', 1)
+			PlaySoundFile([[Interface\AddOns\npcscan\Event_wardrum_ogre.ogg]], 'Master')
+			PlaySoundFile([[Interface\AddOns\npcscan\scourge_horn.ogg]], 'Master')
 			last_played = GetTime()
 		end
 	end
@@ -259,7 +262,7 @@ end
 
 function npcscan.log(msg)
 	if DEFAULT_CHAT_FRAME then
-		DEFAULT_CHAT_FRAME:AddMessage('[npcscan]: '..msg, 1, 1, 0)
+		DEFAULT_CHAT_FRAME:AddMessage('[npcscan] '..msg, 1, 1, 0)
 	end
 end
 
