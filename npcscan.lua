@@ -12,7 +12,7 @@ npcscan = {}
 
 function npcscan.without_errors(f)
     local orig = UIErrorsFrame.AddMessage
-    UIErrorsFrame.AddMessage = Aux.util.pass
+    UIErrorsFrame.AddMessage = function() end
     f()
     UIErrorsFrame.AddMessage = orig
 end
