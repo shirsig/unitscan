@@ -520,5 +520,3 @@ do
 		return self
 	end
 end
-
--- building the frame structure
