@@ -22,7 +22,6 @@ do
 	
 	function npcscan.play_sound()
 		if not last_played or GetTime() - last_played > 10 then -- 8
-		    local orig = GetCVar('MasterSoundEffects')
 			SetCVar('MasterSoundEffects', 0)
 			SetCVar('MasterSoundEffects', 1)
 			PlaySoundFile([[Interface\AddOns\npcscan\Event_wardrum_ogre.ogg]], 'Master')
