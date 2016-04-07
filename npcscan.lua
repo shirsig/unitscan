@@ -3,7 +3,7 @@ local author = 'shirsig'
 
 local BROWN = { .7, .15, .05 }
 local YELLOW = { 1, 1, .15 }
-local CHECK_INTERVAL = .5
+local CHECK_INTERVAL = .1
 
 npcscan_targets = {}
 
