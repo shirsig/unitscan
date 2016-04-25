@@ -280,7 +280,7 @@ function npcscan.add_target(name)
 	local key = strupper(name)
 	if key ~= '' and not npcscan_targets[key] then
 		npcscan_targets[key] = true
-		npcscan.log(key..' (added)')
+		npcscan.log(key..' - added')
 	end
 end
 
@@ -288,7 +288,7 @@ function npcscan.remove_target(name)
 	local key = strupper(name)
 	if npcscan_targets[key] then
 		npcscan_targets[key] = nil
-		npcscan.log(key..' (removed)')
+		npcscan.log(key..' - removed')
 	end
 end
 	
