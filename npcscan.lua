@@ -32,7 +32,7 @@ do
 end
 
 function npcscan.check_for_targets()
-	for name, _ in pairs(npcscan_targets) do
+	for name, _ in npcscan_targets do
 		-- local original_target = UnitName('target')
 		if npcscan.target(name) then
 			-- if UnitPlayerControlled('target') then
@@ -40,7 +40,7 @@ function npcscan.check_for_targets()
 					-- TargetByName(original_target, true)
 				-- end
 			-- else
-			npcscan.remove_target(UnitName('target'))
+			npcscan.toggle_target(name)
 			npcscan.play_sound()
 			if npcscan.flash.animation:playing() then
 				npcscan.flash.animation:stop_after(3)
@@ -275,35 +275,28 @@ function npcscan.sorted_targets()
 	sort(sorted_targets, function(key1, key2) return key1 < key2 end)
 	return sorted_targets
 end
-	
-function npcscan.add_target(name)
-	local key = strupper(name)
-	if key ~= '' and not npcscan_targets[key] then
-		npcscan_targets[key] = true
-		npcscan.log(key..' - added')
-	end
-end
 
-function npcscan.remove_target(name)
+function npcscan.toggle_target(name)
 	local key = strupper(name)
 	if npcscan_targets[key] then
 		npcscan_targets[key] = nil
-		npcscan.log(key..' - removed')
+		npcscan.log('- '..key)
+	elseif key ~= '' then
+		npcscan_targets[key] = true
+		npcscan.log('+ '..key)
 	end
 end
 	
 SLASH_NPCSCAN1 = '/npcscan'
 function SlashCmdList.NPCSCAN(parameter)
-	local _, _, command, name = strfind(parameter, '%s*(%a*)%s*(.*)')
+	local _, _, name = strfind(parameter, '^%s*(.-)%s*$')
 	
-	if command == '' then
+	if name == '' then
 		for _, key in ipairs(npcscan.sorted_targets()) do
 			npcscan.log(key)
 		end
-	elseif command == 'add' then
-		npcscan.add_target(name)
-	elseif command == 'rem' then
-		npcscan.remove_target(name)
+	else
+		npcscan.toggle_target(name)
 	end
 end
 
