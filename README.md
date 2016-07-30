@@ -7,6 +7,6 @@ This addOn automatically scans for characters by name and alerts you upon findin
 The alert is visually and acoustically an exact copy of the famous addOn *_NPCScan* which first appeared during WotLK and in tribute to which this is named *npcscan*, though it also works for players.
 
 There are two commands:<br/>
-**/npcscan** lists the current targets<br/>
-**/npcscan name** adds/removes **name** to/from the targets<br/>
-When a target is detected it is removed and you have to add it again.
+**/npcscan** lists the active scan targets<br/>
+**/npcscan name** adds/removes **name** to/from the scan targets<br/>
+When a target is detected it is removed and has to be readded to continue scanning for it.
