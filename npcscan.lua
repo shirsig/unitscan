@@ -261,7 +261,7 @@ end
 
 function npcscan.log(msg)
 	if DEFAULT_CHAT_FRAME then
-		DEFAULT_CHAT_FRAME:AddMessage('[npcscan] '..msg, 1, 1, 0)
+		DEFAULT_CHAT_FRAME:AddMessage(LIGHTYELLOW_FONT_COLOR_CODE..'[npcscan] '..msg)
 	end
 end
 
