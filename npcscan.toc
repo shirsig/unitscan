@@ -1,4 +1,4 @@
 ## Interface: 11200
 ## Title: npcscan
 ## SavedVariables: npcscan_targets
-npcscan.xml
+npcscan.lua
