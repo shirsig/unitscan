@@ -9,11 +9,14 @@ local CHECK_INTERVAL = .1
 
 npcscan_targets = {}
 
-function npcscan.without_errors(f)
-    local orig = UIErrorsFrame.AddMessage
-    UIErrorsFrame.AddMessage = function() end
-    f()
-    UIErrorsFrame.AddMessage = orig
+do 
+	local nop = function() end
+	function npcscan.without_errors(f)
+	    local orig = UIErrorsFrame.AddMessage
+	    UIErrorsFrame.AddMessage = nop
+	    f()
+	    UIErrorsFrame.AddMessage = orig
+	end
 end
 
 do
