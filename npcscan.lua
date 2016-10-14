@@ -26,8 +26,8 @@ do
 		if not last_played or GetTime() - last_played > 10 then -- 8
 			SetCVar('MasterSoundEffects', 0)
 			SetCVar('MasterSoundEffects', 1)
-			PlaySoundFile([[Interface\AddOns\npcscan\Event_wardrum_ogre.ogg]], 'Master')
-			PlaySoundFile([[Interface\AddOns\npcscan\scourge_horn.ogg]], 'Master')
+			PlaySoundFile[[Interface\AddOns\npcscan\Event_wardrum_ogre.ogg]]
+			PlaySoundFile[[Interface\AddOns\npcscan\scourge_horn.ogg]]
 			last_played = GetTime()
 		end
 	end
@@ -278,10 +278,10 @@ function npcscan.toggle_target(name)
 	local key = strupper(name)
 	if npcscan_targets[key] then
 		npcscan_targets[key] = nil
-		npcscan.log('- '..key)
+		npcscan.log('- ' .. key)
 	elseif key ~= '' then
 		npcscan_targets[key] = true
-		npcscan.log('+ '..key)
+		npcscan.log('+ ' .. key)
 	end
 end
 	
