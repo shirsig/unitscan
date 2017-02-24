@@ -1,4 +1,5 @@
 ## Interface: 11200
+## Author: shirsig
 ## Title: npcscan
 ## Notes: Unit scanner with flashy alert
 ## SavedVariables: npcscan_targets
