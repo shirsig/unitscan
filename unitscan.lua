@@ -161,7 +161,7 @@ function unitscan.LOAD()
 		subtitle:SetTextColor(0, 0, 0)
 		subtitle:SetPoint('TOPLEFT', title, 'BOTTOMLEFT', 0, -4)
 		subtitle:SetPoint('RIGHT', title )
-		subtitle:SetText'NPC Found!'
+		subtitle:SetText'Unit Found!'
 	end
 	
 	do
