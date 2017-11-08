@@ -1,17 +1,17 @@
-npcscan = CreateFrame'Frame'
-npcscan:SetScript('OnUpdate', function() npcscan.UPDATE() end)
-npcscan:SetScript('OnEvent', function() npcscan.LOAD() end)
-npcscan:RegisterEvent'VARIABLES_LOADED'
+local unitscan = CreateFrame'Frame'
+unitscan:SetScript('OnUpdate', function() unitscan.UPDATE() end)
+unitscan:SetScript('OnEvent', function() unitscan.LOAD() end)
+unitscan:RegisterEvent'VARIABLES_LOADED'
 
 local BROWN = {.7, .15, .05}
 local YELLOW = {1, 1, .15}
 local CHECK_INTERVAL = .1
 
-npcscan_targets = {}
+unitscan_targets = {}
 
 do 
 	local nop = function() end
-	function npcscan.without_errors(f)
+	function unitscan.without_errors(f)
 	    local orig = UIErrorsFrame.AddMessage
 	    UIErrorsFrame.AddMessage = nop
 	    f()
@@ -22,38 +22,38 @@ end
 do
 	local last_played
 	
-	function npcscan.play_sound()
+	function unitscan.play_sound()
 		if not last_played or GetTime() - last_played > 10 then -- 8
 			SetCVar('MasterSoundEffects', 0)
 			SetCVar('MasterSoundEffects', 1)
-			PlaySoundFile[[Interface\AddOns\npcscan\Event_wardrum_ogre.ogg]]
-			PlaySoundFile[[Interface\AddOns\npcscan\scourge_horn.ogg]]
+			PlaySoundFile[[Interface\AddOns\unitscan\Event_wardrum_ogre.ogg]]
+			PlaySoundFile[[Interface\AddOns\unitscan\scourge_horn.ogg]]
 			last_played = GetTime()
 		end
 	end
 end
 
-function npcscan.check_for_targets()
-	for name, _ in npcscan_targets do
-		if npcscan.target(name) then
-			npcscan.toggle_target(name)
-			npcscan.play_sound()
-			npcscan.flash.animation:Play()
-			npcscan.button:set_target()
+function unitscan.check_for_targets()
+	for name, _ in unitscan_targets do
+		if unitscan.target(name) then
+			unitscan.toggle_target(name)
+			unitscan.play_sound()
+			unitscan.flash.animation:Play()
+			unitscan.button:set_target()
 		end
 	end
 end
 
-function npcscan.target(name)
+function unitscan.target(name)
 	TargetByName(name, true)
 	local target = UnitName'target'
 	return target and strupper(target) == name
 end
 
-function npcscan.LOAD()
+function unitscan.LOAD()
 	do
 		local flash = CreateFrame'Frame'
-		npcscan.flash = flash
+		unitscan.flash = flash
 		flash:Show()
 		flash:SetAllPoints()
 		flash:SetAlpha(0)
@@ -96,15 +96,15 @@ function npcscan.LOAD()
 		end
 	end
 	
-	local button = CreateFrame('Button', 'npcscan_button', UIParent)
+	local button = CreateFrame('Button', 'unitscan_button', UIParent)
 	button:Hide()
-	npcscan.button = button
+	unitscan.button = button
 	button:SetPoint('BOTTOM', UIParent, 0, 128)
 	button:SetWidth(150)
 	button:SetHeight(42)
 	button:SetScale(1.25)
 	button:SetFrameStrata'FULLSCREEN_DIALOG'
-	button:SetNormalTexture[[Interface\AddOns\npcscan\UI-Achievement-Parchment-Horizontal]]
+	button:SetNormalTexture[[Interface\AddOns\unitscan\UI-Achievement-Parchment-Horizontal]]
 	button:SetBackdrop{
 		tile = true,
 		edgeSize = 16,
@@ -142,7 +142,7 @@ function npcscan.LOAD()
 	
 	do
 		local title_background = button:CreateTexture(nil, 'BORDER')
-		title_background:SetTexture[[Interface\AddOns\npcscan\UI-Achievement-Title]]
+		title_background:SetTexture[[Interface\AddOns\unitscan\UI-Achievement-Title]]
 		title_background:SetPoint('TOPRIGHT', -5, -5)
 		title_background:SetPoint('LEFT', 5, 0)
 		title_background:SetHeight(18)
@@ -218,7 +218,7 @@ function npcscan.LOAD()
 		glow:SetPoint('CENTER', button, 'CENTER')
 		glow:SetWidth(400 / 300 * button:GetWidth())
 		glow:SetHeight(171 / 70 * button:GetHeight())
-		glow:SetTexture[[Interface\AddOns\npcscan\UI-Achievement-Alert-Glow]]
+		glow:SetTexture[[Interface\AddOns\unitscan\UI-Achievement-Alert-Glow]]
 		glow:SetBlendMode'ADD'
 		glow:SetTexCoord(0, .78125, 0, .66796875)
 		glow:SetAlpha(0)
@@ -248,7 +248,7 @@ function npcscan.LOAD()
 		shine:SetPoint('TOPLEFT', button, 0, 8)
 		shine:SetWidth(67 / 300 * button:GetWidth())
 		shine:SetHeight(1.28 * button:GetHeight())
-		shine:SetTexture[[Interface\AddOns\npcscan\UI-Achievement-Alert-Glow]]
+		shine:SetTexture[[Interface\AddOns\unitscan\UI-Achievement-Alert-Glow]]
 		shine:SetBlendMode'ADD'
 		shine:SetTexCoord(.78125, .912109375, 0, .28125)
 		shine:SetAlpha(0)
@@ -282,50 +282,50 @@ function npcscan.LOAD()
 end
 
 do
-	npcscan.last_check = GetTime()
-	function npcscan.UPDATE()
-		if GetTime() - npcscan.last_check >= CHECK_INTERVAL then
-			npcscan.last_check = GetTime()
-			npcscan.without_errors(npcscan.check_for_targets)
+	unitscan.last_check = GetTime()
+	function unitscan.UPDATE()
+		if GetTime() - unitscan.last_check >= CHECK_INTERVAL then
+			unitscan.last_check = GetTime()
+			unitscan.without_errors(unitscan.check_for_targets)
 		end
 	end
 end
 
-function npcscan.log(msg)
+function unitscan.print(msg)
 	if DEFAULT_CHAT_FRAME then
-		DEFAULT_CHAT_FRAME:AddMessage(LIGHTYELLOW_FONT_COLOR_CODE .. '[npcscan] ' .. msg)
+		DEFAULT_CHAT_FRAME:AddMessage(LIGHTYELLOW_FONT_COLOR_CODE .. '<unitscan> ' .. msg)
 	end
 end
 
-function npcscan.sorted_targets()
+function unitscan.sorted_targets()
 	local sorted_targets = {}
-	for key, _ in pairs(npcscan_targets) do
+	for key, _ in pairs(unitscan_targets) do
 		tinsert(sorted_targets, key)
 	end
 	sort(sorted_targets, function(key1, key2) return key1 < key2 end)
 	return sorted_targets
 end
 
-function npcscan.toggle_target(name)
+function unitscan.toggle_target(name)
 	local key = strupper(name)
-	if npcscan_targets[key] then
-		npcscan_targets[key] = nil
-		npcscan.log('- ' .. key)
+	if unitscan_targets[key] then
+		unitscan_targets[key] = nil
+		unitscan.print('- ' .. key)
 	elseif key ~= '' then
-		npcscan_targets[key] = true
-		npcscan.log('+ ' .. key)
+		unitscan_targets[key] = true
+		unitscan.print('+ ' .. key)
 	end
 end
 	
-SLASH_NPCSCAN1 = '/npcscan'
-function SlashCmdList.NPCSCAN(parameter)
+SLASH_UNITSCAN1 = '/unitscan'
+function SlashCmdList.UNITSCAN(parameter)
 	local _, _, name = strfind(parameter, '^%s*(.-)%s*$')
 	
 	if name == '' then
-		for _, key in ipairs(npcscan.sorted_targets()) do
-			npcscan.log(key)
+		for _, key in ipairs(unitscan.sorted_targets()) do
+			unitscan.print(key)
 		end
 	else
-		npcscan.toggle_target(name)
+		unitscan.toggle_target(name)
 	end
 end
