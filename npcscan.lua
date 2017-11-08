@@ -38,12 +38,7 @@ function npcscan.check_for_targets()
 		if npcscan.target(name) then
 			npcscan.toggle_target(name)
 			npcscan.play_sound()
-			if npcscan.flash.animation:playing() then
-				npcscan.flash.animation:stop_after(3)
-			else
-				npcscan.flash:reset()
-				npcscan.flash.animation:play()			
-			end
+			npcscan.flash.animation:Play()
 			npcscan.button:set_target()
 		end
 	end
@@ -68,16 +63,37 @@ function npcscan.LOAD()
 		texture:SetBlendMode'ADD'
 		texture:SetAllPoints()
 		texture:SetTexture[[Interface\FullScreenTextures\LowHealth]]
-		
-		function flash:reset()
-			self:SetAlpha(0)
+
+		flash.animation = CreateFrame'Frame'
+		flash.animation:Hide()
+		flash.animation:SetScript('OnUpdate', function()
+			local t = GetTime() - this.t0
+			if t <= .5 then
+				flash:SetAlpha(t * 2)
+			elseif t <= 1 then
+				flash:SetAlpha(1)
+			elseif t <= 1.5 then
+				flash:SetAlpha(1 - (t - 1) * 2)
+			else
+				flash:SetAlpha(0)
+				this.loops = this.loops - 1
+				if this.loops == 0 then
+					this.t0 = nil
+					this:Hide()
+				else
+					this.t0 = GetTime()
+				end
+			end
+		end)
+		function flash.animation:Play()
+			if self.t0 then
+				self.loops = 4
+			else
+				self.t0 = GetTime()
+				self.loops = 3
+			end
+			self:Show()
 		end
-		
-		local screen_flash_in = npcscan.alpha_animation(flash, 1, .5)
-		local screen_flash_out = npcscan.alpha_animation(flash, -1, .5)
-		local screen_flash_delay = npcscan.delay(.5)
-		
-		flash.animation = (screen_flash_in..screen_flash_delay..screen_flash_out) * 3
 	end
 	
 	local button = CreateFrame('Button', 'npcscan_button', UIParent)
@@ -111,12 +127,8 @@ function npcscan.LOAD()
 		self.model:SetUnit'target'
 
 		self:Show()
-		self.glow.animation:stop()
-		self.shine.animation:stop()
-		self.glow:reset()
-		self.shine:reset()
-		self.glow.animation:play()
-		self.shine.animation:play()
+		self.glow.animation:Play()
+		self.shine.animation:Play()
 	end
 	
 	do
@@ -210,15 +222,24 @@ function npcscan.LOAD()
 		glow:SetBlendMode'ADD'
 		glow:SetTexCoord(0, .78125, 0, .66796875)
 		glow:SetAlpha(0)
-		
-		function glow:reset()
-			self:SetAlpha(0)
+
+		glow.animation = CreateFrame'Frame'
+		glow.animation:Hide()
+		glow.animation:SetScript('OnUpdate', function()
+			local t = GetTime() - this.t0
+			if t <= .2 then
+				glow:SetAlpha(t * 5)
+			elseif t <= .7 then
+				glow:SetAlpha(1 - (t - .2) * 2)
+			else
+				glow:SetAlpha(0)
+				this:Hide()
+			end
+		end)
+		function glow.animation:Play()
+			self.t0 = GetTime()
+			self:Show()
 		end
-		
-		local glow_in = npcscan.alpha_animation(glow, 1, .2)
-		local glow_out = npcscan.alpha_animation(glow, -1, .5)
-		
-		glow.animation = glow_in .. glow_out
 	end
 
 	do
@@ -232,18 +253,31 @@ function npcscan.LOAD()
 		shine:SetTexCoord(.78125, .912109375, 0, .28125)
 		shine:SetAlpha(0)
 		
-		function shine:reset()
-			self:SetAlpha(0)
-			self:SetPoint('TOPLEFT', button, 0, 8)
+		shine.animation = CreateFrame'Frame'
+		shine.animation:Hide()
+		shine.animation:SetScript('OnUpdate', function()
+			local t = GetTime() - this.t0
+			if t <= .3 then
+				shine:SetPoint('TOPLEFT', button, 0, 8)
+			elseif t <= .7 then
+				shine:SetPoint('TOPLEFT', button, (t - .3) * 2.5 * this.distance, 8)
+			end
+			if t <= .3 then
+				shine:SetAlpha(0)
+			elseif t <= .5 then
+				shine:SetAlpha(1)
+			elseif t <= .7 then
+				shine:SetAlpha(1 - (t - .5) * 5)
+			else
+				shine:SetAlpha(0)
+				this:Hide()
+			end
+		end)
+		function shine.animation:Play()
+			self.t0 = GetTime()
+			self.distance = button:GetWidth() - shine:GetWidth() + 8
+			self:Show()
 		end
-		
-		local shine_delay1 = npcscan.delay(.3)
-		local shine_in = npcscan.alpha_animation(shine, 1, 0)
-		local shine_delay2 = npcscan.delay(.2)
-		local shine_move = npcscan.translation_animation(shine, button:GetWidth() - shine:GetWidth() + 8, 0, .4)
-		local shine_out = npcscan.alpha_animation(shine, -1, .2)
-		
-		shine.animation = (shine_delay1 .. shine_in) .. (shine_move + (shine_delay2 .. shine_out))
 	end
 end
 
@@ -262,8 +296,6 @@ function npcscan.log(msg)
 		DEFAULT_CHAT_FRAME:AddMessage(LIGHTYELLOW_FONT_COLOR_CODE .. '[npcscan] ' .. msg)
 	end
 end
-
--- Slash commands
 
 function npcscan.sorted_targets()
 	local sorted_targets = {}
@@ -295,218 +327,5 @@ function SlashCmdList.NPCSCAN(parameter)
 		end
 	else
 		npcscan.toggle_target(name)
-	end
-end
-
--- Animation framework
-
-function npcscan.translation_animation(target, x_change, y_change, duration)
-	return npcscan.animation(
-		{x_change, y_change},
-		duration,
-		function()
-			local _, _, _, original_x, original_y = target:GetPoint()
-			return original_x, original_y
-		end,
-		function(x, y)
-			local point, relative_to, relative_point = target:GetPoint()
-			target:SetPoint(
-				point,
-				relative_to,
-				relative_point,
-				x,
-				y
-			)
-		end
-	)
-end
-
-function npcscan.alpha_animation(target, change, duration)
-	return npcscan.animation(
-		{change},
-		duration,
-		function()
-			return target:GetAlpha()
-		end,
-		function(alpha)
-			target:SetAlpha(alpha)
-		end
-	)
-end
-
-function npcscan.delay(t)
-	return npcscan.animation({}, t, function() end, function() end)
-end
-
-do
-	local animation_metamethods = {}
-	
-	local mul_mt = { __index={} }
-	local add_mt = { __index={} }
-	local concat_mt = { __index={} }
-	local animation_mt = { __index={} }
-	
-	
-	function animation_metamethods.__mul(animation, repetitions)
-		local self = {
-			_frame = CreateFrame'Frame',
-			_repetitions_left = 0,
-			_repetitions = repetitions,
-			_animation = animation,
-		}
-		setmetatable(self, mul_mt)
-		
-		self._frame:SetScript('OnUpdate', function()
-			self:_on_update()
-		end)
-		
-		return self
-	end
-	function animation_metamethods.__add(lhs, rhs)
-		local self = {}
-		setmetatable(self, add_mt)
-		
-		self._animations = {lhs, rhs}
-	
-		return self
-	end
-	function animation_metamethods.__concat(lhs, rhs)
-		local self = { _frame=CreateFrame'Frame' }
-		setmetatable(self, concat_mt)
-		
-		self._animations = {lhs, rhs}
-		
-		self._frame:SetScript('OnUpdate', function()
-			self:_on_update()
-		end)
-			
-		return self
-	end
-	
-	
-	for _, mt in ipairs({mul_mt, add_mt, concat_mt, animation_mt}) do
-		for key, metamethod in pairs(animation_metamethods) do
-			mt[key] = metamethod
-		end
-	end
-	
-	
-	function mul_mt.__index:play()
-		self._repetitions_left = self._repetitions
-	end	
-	function mul_mt.__index:playing()
-		return self._repetitions_left > 0
-	end
-	function mul_mt.__index:stop()
-		self._repetitions_left = 0
-	end
-	function mul_mt.__index:stop_after(repetitions)
-		self._repetitions_left = self._repetitions
-	end
-	function mul_mt.__index:_on_update()
-		if self._repetitions_left > 0 then
-			if not self._animation_started then
-				self._animation:play()
-				self._animation_started = true
-			elseif not self._animation:playing() then
-				self._repetitions_left = self._repetitions_left - 1
-				self._animation_started = false
-			end
-		end
-	end
-
-	
-	function add_mt.__index:play()
-		for _, animation in ipairs(self._animations) do
-			animation:play()
-		end
-	end
-	function add_mt.__index:playing()
-		for _, animation in ipairs(self._animations) do
-			if animation:playing() then
-				return true
-			end
-		end
-	end
-	function add_mt.__index:stop()
-		for _, animation in ipairs(self._animations) do
-			animation:stop()
-		end
-	end
-	
-	
-	function concat_mt.__index:play()
-		self._index = 1
-	end	
-	function concat_mt.__index:playing()
-		return self._index ~= nil
-	end
-	function concat_mt.__index:stop()
-		if self._index and self._animations[self._index] then
-			self._animations[self._index]:stop()
-		end
-		self._index = nil
-	end
-	function concat_mt.__index:_on_update()
-		if self._index then
-			if not self._animations[self._index] then
-				self._index = nil
-			elseif not self._animation_started then
-				self._animations[self._index]:play()
-				self._animation_started = true
-			elseif not self._animations[self._index]:playing() then
-				self._index = self._index + 1
-				self._animation_started = false
-			end
-		end
-	end
-	
-	
-	function animation_mt.__index:play()
-		self._t0 = GetTime()
-		self._original_values = {self._getter()}
-	end
-	function animation_mt.__index:stop()
-		self._t0 = nil
-	end
-	function animation_mt.__index:playing()
-		return self._t0 ~= nil
-	end
-	function animation_mt.__index:_current_changes(factor)
-		local values = {}
-		for i, change in ipairs(self._changes) do
-			tinsert(values, self._original_values[i] + change * factor)
-		end
-		return unpack(values)
-	end
-	function animation_mt.__index:_on_update(factor)
-		if self._t0 then
-			local progress = GetTime() - self._t0
-			if progress >= self._duration then
-				self._callback(self:_current_changes(1))
-				self._t0 = nil
-			else
-				self._callback(self:_current_changes(progress / self._duration))
-			end
-		end
-	end
-	
-	
-	function npcscan.animation(changes, duration, getter, callback)
-		
-		local self = { 
-			_frame = CreateFrame'Frame',
-			_changes = changes,
-			_duration = duration,
-			_getter = getter,
-			_callback = callback,
-		}
-		setmetatable(self, animation_mt)
-		
-		self._frame:SetScript('OnUpdate', function()
-			self:_on_update()
-		end)
-		
-		return self
 	end
 end
