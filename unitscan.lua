@@ -103,6 +103,19 @@ function unitscan.LOAD()
 	button:SetWidth(150)
 	button:SetHeight(42)
 	button:SetScale(1.25)
+	button:SetMovable(true)
+	button:SetUserPlaced(true)
+	button:SetClampedToScreen(true)
+	button:SetScript('OnMouseDown', function()
+		if IsControlKeyDown() then
+			this:RegisterForClicks()
+			this:StartMoving()
+		end
+	end)
+	button:SetScript('OnMouseUp', function()
+		this:StopMovingOrSizing()
+		this:RegisterForClicks'LeftButtonDown'
+	end)
 	button:SetFrameStrata'FULLSCREEN_DIALOG'
 	button:SetNormalTexture[[Interface\AddOns\unitscan\UI-Achievement-Parchment-Horizontal]]
 	button:SetBackdrop{
