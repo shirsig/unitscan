@@ -9,16 +9,6 @@ local CHECK_INTERVAL = .1
 
 unitscan_targets = {}
 
-do 
-	local nop = function() end
-	function unitscan.without_errors(f)
-	    local orig = UIErrorsFrame.AddMessage
-	    UIErrorsFrame.AddMessage = nop
-	    f()
-	    UIErrorsFrame.AddMessage = orig
-	end
-end
-
 do
 	local last_played
 	
@@ -44,10 +34,25 @@ function unitscan.check_for_targets()
 	end
 end
 
-function unitscan.target(name)
-	TargetByName(name, true)
-	local target = UnitName'target'
-	return target and strupper(target) == name
+do
+	local show_target_error = true
+
+	do
+		local orig = UIErrorsFrame_OnEvent
+		function UIErrorsFrame_OnEvent(event, msg)
+		    if show_target_error or msg ~= ERR_UNIT_NOT_FOUND then
+		        return orig(event, msg)
+		    end
+		end
+	end
+
+	function unitscan.target(name)
+		show_target_error = false
+		TargetByName(name, true)
+		show_target_error = true
+		local target = UnitName'target'
+		return target and strupper(target) == name
+	end
 end
 
 function unitscan.LOAD()
@@ -299,7 +304,7 @@ do
 	function unitscan.UPDATE()
 		if GetTime() - unitscan.last_check >= CHECK_INTERVAL then
 			unitscan.last_check = GetTime()
-			unitscan.without_errors(unitscan.check_for_targets)
+			unitscan.check_for_targets()
 		end
 	end
 end
