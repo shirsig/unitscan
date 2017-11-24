@@ -35,21 +35,13 @@ function unitscan.check_for_targets()
 end
 
 do
-	local show_target_error = true
-
-	do
-		local orig = UIErrorsFrame_OnEvent
-		function UIErrorsFrame_OnEvent(event, msg)
-		    if show_target_error or msg ~= ERR_UNIT_NOT_FOUND then
-		        return orig(event, msg)
-		    end
-		end
-	end
+	local pass = function() end
 
 	function unitscan.target(name)
-		show_target_error = false
+		local orig = UIErrorsFrame_OnEvent
+		UIErrorsFrame_OnEvent = pass
 		TargetByName(name, true)
-		show_target_error = true
+		UIErrorsFrame_OnEvent = orig
 		local target = UnitName'target'
 		return target and strupper(target) == name
 	end
