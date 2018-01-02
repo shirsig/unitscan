@@ -309,7 +309,7 @@ end
 
 function unitscan.sorted_targets()
 	local sorted_targets = {}
-	for key, _ in pairs(unitscan_targets) do
+	for key in pairs(unitscan_targets) do
 		tinsert(sorted_targets, key)
 	end
 	sort(sorted_targets, function(key1, key2) return key1 < key2 end)
