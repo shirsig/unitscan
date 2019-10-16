@@ -1,21 +1,28 @@
 local unitscan = CreateFrame'Frame'
+local forbidden
 unitscan:SetScript('OnUpdate', function() unitscan.UPDATE() end)
-unitscan:SetScript('OnEvent', function() unitscan.LOAD() end)
-unitscan:RegisterEvent'VARIABLES_LOADED'
+unitscan:SetScript('OnEvent', function(_, event, addon)
+	if event == 'ADDON_LOADED' and addon == 'unitscan' then
+		unitscan.LOAD()
+	elseif event == 'ADDON_ACTION_FORBIDDEN' and addon == 'unitscan' then
+		forbidden = true
+	end
+end)
+unitscan:RegisterEvent'ADDON_LOADED'
+unitscan:RegisterEvent'ADDON_ACTION_FORBIDDEN'
 
 local BROWN = {.7, .15, .05}
 local YELLOW = {1, 1, .15}
 local CHECK_INTERVAL = .1
 
 unitscan_targets = {}
+local found = {}
 
 do
 	local last_played
 	
 	function unitscan.play_sound()
 		if not last_played or GetTime() - last_played > 10 then -- 8
-			SetCVar('MasterSoundEffects', 0)
-			SetCVar('MasterSoundEffects', 1)
 			PlaySoundFile[[Interface\AddOns\unitscan\Event_wardrum_ogre.ogg]]
 			PlaySoundFile[[Interface\AddOns\unitscan\scourge_horn.ogg]]
 			last_played = GetTime()
@@ -24,13 +31,8 @@ do
 end
 
 function unitscan.check_for_targets()
-	for name, _ in unitscan_targets do
-		if unitscan.target(name) then
-			unitscan.toggle_target(name)
-			unitscan.play_sound()
-			unitscan.flash.animation:Play()
-			unitscan.button:set_target()
-		end
+	for name in pairs(unitscan_targets) do
+		unitscan.target(name)
 	end
 end
 
@@ -38,16 +40,26 @@ do
 	local pass = function() end
 
 	function unitscan.target(name)
-		local orig = UIErrorsFrame_OnEvent
-		UIErrorsFrame_OnEvent = pass
-		TargetByName(name, true)
-		UIErrorsFrame_OnEvent = orig
-		local target = UnitName'target'
-		return target and strupper(target) == name
+		forbidden = false
+		local sound_setting = GetCVar'Sound_EnableAllSound'
+		SetCVar('Sound_EnableAllSound', 0)
+		TargetUnit(name)
+		SetCVar('Sound_EnableAllSound', sound_setting)
+		if forbidden then
+			if not found[name] then
+				found[name] = true
+				unitscan.play_sound()
+				unitscan.flash.animation:Play()
+				unitscan.discovered_unit = name
+			end
+		else
+			found[name] = false
+		end
 	end
 end
 
 function unitscan.LOAD()
+	UIParent:UnregisterEvent'ADDON_ACTION_FORBIDDEN'
 	do
 		local flash = CreateFrame'Frame'
 		unitscan.flash = flash
@@ -63,8 +75,8 @@ function unitscan.LOAD()
 
 		flash.animation = CreateFrame'Frame'
 		flash.animation:Hide()
-		flash.animation:SetScript('OnUpdate', function()
-			local t = GetTime() - this.t0
+		flash.animation:SetScript('OnUpdate', function(self)
+			local t = GetTime() - self.t0
 			if t <= .5 then
 				flash:SetAlpha(t * 2)
 			elseif t <= 1 then
@@ -73,12 +85,12 @@ function unitscan.LOAD()
 				flash:SetAlpha(1 - (t - 1) * 2)
 			else
 				flash:SetAlpha(0)
-				this.loops = this.loops - 1
-				if this.loops == 0 then
-					this.t0 = nil
-					this:Hide()
+				self.loops = self.loops - 1
+				if self.loops == 0 then
+					self.t0 = nil
+					self:Hide()
 				else
-					this.t0 = GetTime()
+					self.t0 = GetTime()
 				end
 			end
 		end)
@@ -93,7 +105,8 @@ function unitscan.LOAD()
 		end
 	end
 	
-	local button = CreateFrame('Button', 'unitscan_button', UIParent)
+	local button = CreateFrame('Button', 'unitscan_button', UIParent, 'SecureActionButtonTemplate')
+	button:SetAttribute('type', 'macro')
 	button:Hide()
 	unitscan.button = button
 	button:SetPoint('BOTTOM', UIParent, 0, 128)
@@ -103,15 +116,15 @@ function unitscan.LOAD()
 	button:SetMovable(true)
 	button:SetUserPlaced(true)
 	button:SetClampedToScreen(true)
-	button:SetScript('OnMouseDown', function()
+	button:SetScript('OnMouseDown', function(self)
 		if IsControlKeyDown() then
-			this:RegisterForClicks()
-			this:StartMoving()
+			self:RegisterForClicks()
+			self:StartMoving()
 		end
 	end)
-	button:SetScript('OnMouseUp', function()
-		this:StopMovingOrSizing()
-		this:RegisterForClicks'LeftButtonDown'
+	button:SetScript('OnMouseUp', function(self)
+		self:StopMovingOrSizing()
+		self:RegisterForClicks'LeftButtonDown'
 	end)
 	button:SetFrameStrata'FULLSCREEN_DIALOG'
 	button:SetNormalTexture[[Interface\AddOns\unitscan\UI-Achievement-Parchment-Horizontal]]
@@ -121,20 +134,17 @@ function unitscan.LOAD()
 		edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
 	}
 	button:SetBackdropBorderColor(unpack(BROWN))
-	button:SetScript('OnEnter', function()
-		this:SetBackdropBorderColor(unpack(YELLOW))
+	button:SetScript('OnEnter', function(self)
+		self:SetBackdropBorderColor(unpack(YELLOW))
 	end)
-	button:SetScript('OnLeave', function()
-		this:SetBackdropBorderColor(unpack(BROWN))
+	button:SetScript('OnLeave', function(self)
+		self:SetBackdropBorderColor(unpack(BROWN))
 	end)
-	button:SetScript('OnClick', function()
-		TargetByName(this:GetText(), true)
-	end)
-	function button:set_target()
-		self:SetText(UnitName'target')
-
-		self.model:reset()
-		self.model:SetUnit'target'
+	function button:set_target(name)
+		self:SetText(name)
+		self:SetAttribute('macrotext', '/cleartarget\n/targetexact ' .. name)
+		-- self.model:reset()
+		-- self.model:SetUnit(unitscan.guid)
 
 		self:Show()
 		self.glow.animation:Play()
@@ -159,15 +169,17 @@ function unitscan.LOAD()
 		title_background:SetTexCoord(0, .9765625, 0, .3125)
 		title_background:SetAlpha(.8)
 
-		local title = button:CreateFontString(nil, 'OVERLAY')
-		title:SetFont([[Fonts\FRIZQT__.TTF]], 14)
+		local title = button:CreateFontString(nil, 'OVERLAY', 'unitscan_font')
+		title:SetWordWrap(false)
+		title:SetTextHeight(14)
 		title:SetShadowOffset(1, -1)
 		title:SetPoint('TOPLEFT', title_background, 0, 0)
 		title:SetPoint('RIGHT', title_background)
 		button:SetFontString(title)
 
-		local subtitle = button:CreateFontString(nil, 'OVERLAY')
-		subtitle:SetFont([[Fonts\FRIZQT__.TTF]], 9)
+		local subtitle = button:CreateFontString(nil, 'OVERLAY', 'unitscan_font')
+		subtitle:SetWordWrap(false)
+		subtitle:SetTextHeight(9)
 		subtitle:SetTextColor(0, 0, 0)
 		subtitle:SetPoint('TOPLEFT', title, 'BOTTOMLEFT', 0, -4)
 		subtitle:SetPoint('RIGHT', title )
@@ -184,7 +196,7 @@ function unitscan.LOAD()
 		do
 			local last_update, delay
 			function model:on_update()
-				this:SetFacing(this:GetFacing() + (GetTime() - last_update) * math.pi / 4)
+				self:SetFacing(self:GetFacing() + (GetTime() - last_update) * math.pi / 4)
 				last_update = GetTime()
 			end
 			
@@ -194,10 +206,10 @@ function unitscan.LOAD()
 					return
 				end
 				
-				this:SetScript('OnUpdateModel', nil)
-				this:SetScript('OnUpdate', this.on_update)
-				this:SetModelScale(.75)
-				this:SetAlpha(1)	
+				self:SetScript('OnUpdateModel', nil)
+				self:SetScript('OnUpdate', self.on_update)
+				self:SetModelScale(.75)
+				self:SetAlpha(1)	
 				last_update = GetTime()
 			end
 			
@@ -207,6 +219,7 @@ function unitscan.LOAD()
 				self:SetModelScale(1)
 				self:ClearModel()
 				self:SetScript('OnUpdate', nil)
+						p(self)
 				self:SetScript("OnUpdateModel", self.on_update_model)
 				delay = 10 -- to prevent scaling bugs
 			end
@@ -235,15 +248,15 @@ function unitscan.LOAD()
 
 		glow.animation = CreateFrame'Frame'
 		glow.animation:Hide()
-		glow.animation:SetScript('OnUpdate', function()
-			local t = GetTime() - this.t0
+		glow.animation:SetScript('OnUpdate', function(self)
+			local t = GetTime() - self.t0
 			if t <= .2 then
 				glow:SetAlpha(t * 5)
 			elseif t <= .7 then
 				glow:SetAlpha(1 - (t - .2) * 2)
 			else
 				glow:SetAlpha(0)
-				this:Hide()
+				self:Hide()
 			end
 		end)
 		function glow.animation:Play()
@@ -265,12 +278,12 @@ function unitscan.LOAD()
 		
 		shine.animation = CreateFrame'Frame'
 		shine.animation:Hide()
-		shine.animation:SetScript('OnUpdate', function()
-			local t = GetTime() - this.t0
+		shine.animation:SetScript('OnUpdate', function(self)
+			local t = GetTime() - self.t0
 			if t <= .3 then
 				shine:SetPoint('TOPLEFT', button, 0, 8)
 			elseif t <= .7 then
-				shine:SetPoint('TOPLEFT', button, (t - .3) * 2.5 * this.distance, 8)
+				shine:SetPoint('TOPLEFT', button, (t - .3) * 2.5 * self.distance, 8)
 			end
 			if t <= .3 then
 				shine:SetAlpha(0)
@@ -280,7 +293,7 @@ function unitscan.LOAD()
 				shine:SetAlpha(1 - (t - .5) * 5)
 			else
 				shine:SetAlpha(0)
-				this:Hide()
+				self:Hide()
 			end
 		end)
 		function shine.animation:Play()
@@ -294,6 +307,10 @@ end
 do
 	unitscan.last_check = GetTime()
 	function unitscan.UPDATE()
+		if unitscan.discovered_unit and not InCombatLockdown() then
+			unitscan.button:set_target(unitscan.discovered_unit)
+			unitscan.discovered_unit = nil
+		end
 		if GetTime() - unitscan.last_check >= CHECK_INTERVAL then
 			unitscan.last_check = GetTime()
 			unitscan.check_for_targets()
@@ -320,6 +337,7 @@ function unitscan.toggle_target(name)
 	local key = strupper(name)
 	if unitscan_targets[key] then
 		unitscan_targets[key] = nil
+		found[key] = nil
 		unitscan.print('- ' .. key)
 	elseif key ~= '' then
 		unitscan_targets[key] = true
