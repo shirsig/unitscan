@@ -1,15 +1,20 @@
 local unitscan = CreateFrame'Frame'
 local forbidden
 unitscan:SetScript('OnUpdate', function() unitscan.UPDATE() end)
-unitscan:SetScript('OnEvent', function(_, event, addon)
-	if event == 'ADDON_LOADED' and addon == 'unitscan' then
+unitscan:SetScript('OnEvent', function(_, event, arg1)
+	if event == 'ADDON_LOADED' and arg1 == 'unitscan' then
 		unitscan.LOAD()
-	elseif event == 'ADDON_ACTION_FORBIDDEN' and addon == 'unitscan' then
+	elseif event == 'ADDON_ACTION_FORBIDDEN' and arg1 == 'unitscan' then
 		forbidden = true
+	elseif event == 'PLAYER_TARGET_CHANGED' then
+		if UnitName'target' and strupper(UnitName'target') == unitscan.button:GetText() and not GetRaidTargetIndex'target' and (not IsInRaid() or UnitIsGroupAssistant'player' or UnitIsGroupLeader'player') then
+			SetRaidTarget('target', 8)
+		end
 	end
 end)
 unitscan:RegisterEvent'ADDON_LOADED'
 unitscan:RegisterEvent'ADDON_ACTION_FORBIDDEN'
+unitscan:RegisterEvent'PLAYER_TARGET_CHANGED'
 
 local BROWN = {.7, .15, .05}
 local YELLOW = {1, 1, .15}
@@ -156,7 +161,7 @@ function unitscan.LOAD()
 		title_background:SetTexCoord(0, .9765625, 0, .3125)
 		title_background:SetAlpha(.8)
 
-		local title = button:CreateFontString(nil, 'OVERLAY', 'unitscan_font')
+		local title = button:CreateFontString(nil, 'OVERLAY', 'GameFontHighlightMedium')
 		title:SetWordWrap(false)
 		title:SetTextHeight(14)
 		title:SetShadowOffset(1, -1)
@@ -164,7 +169,7 @@ function unitscan.LOAD()
 		title:SetPoint('RIGHT', title_background)
 		button:SetFontString(title)
 
-		local subtitle = button:CreateFontString(nil, 'OVERLAY', 'unitscan_font')
+		local subtitle = button:CreateFontString(nil, 'OVERLAY', 'SystemFont_Tiny')
 		subtitle:SetWordWrap(false)
 		subtitle:SetTextHeight(9)
 		subtitle:SetTextColor(0, 0, 0)
