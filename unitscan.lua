@@ -22,7 +22,7 @@ do
 	local last_played
 	
 	function unitscan.play_sound()
-		if not last_played or GetTime() - last_played > 10 then -- 8
+		if not last_played or GetTime() - last_played > 8 then
 			PlaySoundFile[[Interface\AddOns\unitscan\Event_wardrum_ogre.ogg]]
 			PlaySoundFile[[Interface\AddOns\unitscan\scourge_horn.ogg]]
 			last_played = GetTime()
@@ -30,31 +30,21 @@ do
 	end
 end
 
-function unitscan.check_for_targets()
-	for name in pairs(unitscan_targets) do
-		unitscan.target(name)
-	end
-end
-
-do
-	local pass = function() end
-
-	function unitscan.target(name)
-		forbidden = false
-		local sound_setting = GetCVar'Sound_EnableAllSound'
-		SetCVar('Sound_EnableAllSound', 0)
-		TargetUnit(name, true)
-		SetCVar('Sound_EnableAllSound', sound_setting)
-		if forbidden then
-			if not found[name] then
-				found[name] = true
-				unitscan.play_sound()
-				unitscan.flash.animation:Play()
-				unitscan.discovered_unit = name
-			end
-		else
-			found[name] = false
+function unitscan.target(name)
+	forbidden = false
+	local sound_setting = GetCVar'Sound_EnableAllSound'
+	SetCVar('Sound_EnableAllSound', 0)
+	TargetUnit(name, true)
+	SetCVar('Sound_EnableAllSound', sound_setting)
+	if forbidden then
+		if not found[name] then
+			found[name] = true
+			unitscan.play_sound()
+			unitscan.flash.animation:Play()
+			unitscan.discovered_unit = name
 		end
+	else
+		found[name] = false
 	end
 end
 
@@ -143,9 +133,6 @@ function unitscan.LOAD()
 	function button:set_target(name)
 		self:SetText(name)
 		self:SetAttribute('macrotext', '/cleartarget\n/targetexact ' .. name)
-		-- self.model:reset()
-		-- self.model:SetUnit(unitscan.guid)
-
 		self:Show()
 		self.glow.animation:Play()
 		self.shine.animation:Play()
@@ -182,7 +169,7 @@ function unitscan.LOAD()
 		subtitle:SetTextHeight(9)
 		subtitle:SetTextColor(0, 0, 0)
 		subtitle:SetPoint('TOPLEFT', title, 'BOTTOMLEFT', 0, -4)
-		subtitle:SetPoint('RIGHT', title )
+		subtitle:SetPoint('RIGHT', title)
 		subtitle:SetText'Unit Found!'
 	end
 	
@@ -192,38 +179,6 @@ function unitscan.LOAD()
 		model:SetPoint('BOTTOMLEFT', button, 'TOPLEFT', 0, -4)
 		model:SetPoint('RIGHT', 0, 0)
 		model:SetHeight(button:GetWidth() * .6)
-		
-		do
-			local last_update, delay
-			function model:on_update()
-				self:SetFacing(self:GetFacing() + (GetTime() - last_update) * math.pi / 4)
-				last_update = GetTime()
-			end
-			
-			function model:on_update_model()
-				if delay > 0 then
-					delay = delay - 1
-					return
-				end
-				
-				self:SetScript('OnUpdateModel', nil)
-				self:SetScript('OnUpdate', self.on_update)
-				self:SetModelScale(.75)
-				self:SetAlpha(1)	
-				last_update = GetTime()
-			end
-			
-			function model:reset()
-				self:SetAlpha(0)
-				self:SetFacing(0)
-				self:SetModelScale(1)
-				self:ClearModel()
-				self:SetScript('OnUpdate', nil)
-						p(self)
-				self:SetScript("OnUpdateModel", self.on_update_model)
-				delay = 10 -- to prevent scaling bugs
-			end
-		end
 	end
 	
 	do
@@ -313,7 +268,9 @@ do
 		end
 		if GetTime() - unitscan.last_check >= CHECK_INTERVAL then
 			unitscan.last_check = GetTime()
-			unitscan.check_for_targets()
+			for name in pairs(unitscan_targets) do
+				unitscan.target(name)
+			end
 		end
 	end
 end
