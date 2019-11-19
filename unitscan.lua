@@ -8,7 +8,7 @@ unitscan:SetScript('OnEvent', function(_, event, arg1)
 		forbidden = true
 	elseif event == 'PLAYER_TARGET_CHANGED' then
 		if UnitName'target' and strupper(UnitName'target') == unitscan.button:GetText() and not GetRaidTargetIndex'target' and (not IsInRaid() or UnitIsGroupAssistant'player' or UnitIsGroupLeader'player') then
-			SetRaidTarget('target', 8)
+			SetRaidTarget('target', 4)
 		end
 	end
 end)
