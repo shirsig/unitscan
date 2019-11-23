@@ -163,16 +163,11 @@ function unitscan.LOAD()
 
 		local title = button:CreateFontString(nil, 'OVERLAY', 'GameFontHighlightMedium')
 		title:SetWordWrap(false)
-		title:SetTextHeight(14)
-		title:SetShadowOffset(1, -1)
 		title:SetPoint('TOPLEFT', title_background, 0, 0)
 		title:SetPoint('RIGHT', title_background)
 		button:SetFontString(title)
 
-		local subtitle = button:CreateFontString(nil, 'OVERLAY', 'SystemFont_Tiny')
-		subtitle:SetWordWrap(false)
-		subtitle:SetTextHeight(9)
-		subtitle:SetTextColor(0, 0, 0)
+		local subtitle = button:CreateFontString(nil, 'OVERLAY', 'GameFontBlackTiny')
 		subtitle:SetPoint('TOPLEFT', title, 'BOTTOMLEFT', 0, -4)
 		subtitle:SetPoint('RIGHT', title)
 		subtitle:SetText'Unit Found!'
