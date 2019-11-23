@@ -28,8 +28,8 @@ do
 	
 	function unitscan.play_sound()
 		if not last_played or GetTime() - last_played > 8 then
-			PlaySoundFile[[Interface\AddOns\unitscan\Event_wardrum_ogre.ogg]]
-			PlaySoundFile[[Interface\AddOns\unitscan\scourge_horn.ogg]]
+			PlaySoundFile([[Interface\AddOns\unitscan\Event_wardrum_ogre.ogg]], 'Master')
+			PlaySoundFile([[Interface\AddOns\unitscan\scourge_horn.ogg]], 'Master')
 			last_played = GetTime()
 		end
 	end
