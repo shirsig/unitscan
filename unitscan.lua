@@ -45,6 +45,7 @@ function unitscan.target(name)
 		if not found[name] then
 			found[name] = true
 			unitscan.play_sound()
+			SendChatMessage("World Boss " .. name .. " was found by my unitscan.", "GUILD")
 			unitscan.flash.animation:Play()
 			unitscan.discovered_unit = name
 		end
