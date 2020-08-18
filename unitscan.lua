@@ -44,6 +44,7 @@ function unitscan.target(name)
 	if forbidden then
 		if not found[name] then
 			found[name] = true
+			FlashClientIcon()
 			unitscan.play_sound()
 			unitscan.flash.animation:Play()
 			unitscan.discovered_unit = name
