@@ -1,7 +1,7 @@
-## Interface: 11305
+## Interface: 11306
 ## Author: shirsig
 ## Title: unitscan
-## Version: 1.0.3
+## Version: 1.0.4
 ## Notes: Unit scanner with flashy alert
 ## SavedVariables: unitscan_targets
 unitscan.lua
