@@ -101,7 +101,7 @@ function unitscan.LOAD()
 		end
 	end
 	
-	local button = CreateFrame('Button', 'unitscan_button', UIParent, 'SecureActionButtonTemplate')
+	local button = CreateFrame('Button', 'unitscan_button', UIParent, 'SecureActionButtonTemplate,BackdropTemplate')
 	button:SetAttribute('type', 'macro')
 	button:Hide()
 	unitscan.button = button
