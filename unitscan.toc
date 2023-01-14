@@ -1,7 +1,7 @@
 ## Interface: 30400
 ## Author: shirsig
 ## Title: unitscan
-## Version: @project-version@
+## Version: v3.0.0
 ## Notes: Unit scanner with flashy alert
-## SavedVariables: unitscan_targets
+## SavedVariables: unitscan_targets, custom_sound_1_targets, custom_sound_2_targets, custom_sound_3_targets
 unitscan.lua

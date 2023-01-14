@@ -21,15 +21,26 @@ local YELLOW = {1, 1, .15}
 local CHECK_INTERVAL = .1
 
 unitscan_targets = {}
+custom_sound_1_targets = {}
+custom_sound_2_targets = {}
+custom_sound_3_targets = {}
 local found = {}
 
 do
 	local last_played
 	
-	function unitscan.play_sound()
+	function unitscan.play_sound(name)
 		if not last_played or GetTime() - last_played > 8 then
-			PlaySoundFile([[Interface\AddOns\unitscan\Event_wardrum_ogre.ogg]], 'Master')
-			PlaySoundFile([[Interface\AddOns\unitscan\scourge_horn.ogg]], 'Master')
+			if custom_sound_1_targets[name] then
+				PlaySoundFile([[Interface\AddOns\unitscan\custom_sound_1.ogg]], 'Master')
+			elseif custom_sound_2_targets[name] then
+				PlaySoundFile([[Interface\AddOns\unitscan\custom_sound_2.ogg]], 'Master')
+			elseif custom_sound_3_targets[name] then
+				PlaySoundFile([[Interface\AddOns\unitscan\custom_sound_3.ogg]], 'Master')
+			else
+				PlaySoundFile([[Interface\AddOns\unitscan\Event_wardrum_ogre.ogg]], 'Master')
+				PlaySoundFile([[Interface\AddOns\unitscan\scourge_horn.ogg]], 'Master')
+			end
 			last_played = GetTime()
 		end
 	end
@@ -45,7 +56,7 @@ function unitscan.target(name)
 		if not found[name] then
 			found[name] = true
 			FlashClientIcon()
-			unitscan.play_sound()
+			unitscan.play_sound(name)
 			unitscan.flash.animation:Play()
 			unitscan.discovered_unit = name
 		end
@@ -282,36 +293,54 @@ function unitscan.print(msg)
 	end
 end
 
-function unitscan.sorted_targets()
+function unitscan.sorted_targets(list)
 	local sorted_targets = {}
-	for key in pairs(unitscan_targets) do
+	for key in pairs(list) do
 		tinsert(sorted_targets, key)
 	end
 	sort(sorted_targets, function(key1, key2) return key1 < key2 end)
 	return sorted_targets
 end
 
-function unitscan.toggle_target(name)
+function unitscan.toggle_target(name, custom_sound)
 	local key = strupper(name)
 	if unitscan_targets[key] then
 		unitscan_targets[key] = nil
+		custom_sound_1_targets[key] = nil
+		custom_sound_2_targets[key] = nil
+		custom_sound_3_targets[key] = nil
 		found[key] = nil
 		unitscan.print('- ' .. key)
 	elseif key ~= '' then
 		unitscan_targets[key] = true
 		unitscan.print('+ ' .. key)
+
+		if custom_sound ~= nil then
+			if custom_sound == '1' then
+				custom_sound_1_targets[key] = true
+			elseif custom_sound == '2' then
+				custom_sound_2_targets[key] = true
+			elseif custom_sound == '3' then
+				custom_sound_3_targets[key] = true
+			end
+		end
 	end
 end
 	
 SLASH_UNITSCAN1 = '/unitscan'
 function SlashCmdList.UNITSCAN(parameter)
-	local _, _, name = strfind(parameter, '^%s*(.-)%s*$')
-	
-	if name == '' then
-		for _, key in ipairs(unitscan.sorted_targets()) do
+	local start, _, name = strfind(parameter, '^%s*(.-)%s*$')
+	local custom_start, _, custom_sound = strfind(name, '/(.)')
+	local name_without_custom_sound = name
+	if (custom_start) then
+		name_without_custom_sound = strsub(name, start, custom_start-2)
+	end
+
+	if name_without_custom_sound == nil or name_without_custom_sound == '' then
+		for _, key in ipairs(unitscan.sorted_targets(unitscan_targets)) do
 			unitscan.print(key)
 		end
 	else
-		unitscan.toggle_target(name)
+		unitscan.toggle_target(name_without_custom_sound, custom_sound)
 	end
 end
