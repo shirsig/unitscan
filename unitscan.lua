@@ -37,10 +37,7 @@ end
 
 function unitscan.target(name)
 	forbidden = false
-	local sound_setting = GetCVar'Sound_EnableAllSound'
-	SetCVar('Sound_EnableAllSound', 0)
 	TargetUnit(name, true)
-	SetCVar('Sound_EnableAllSound', sound_setting)
 	if forbidden then
 		if not found[name] then
 			found[name] = true
