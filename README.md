@@ -9,4 +9,5 @@ The alert is visually and acoustically an exact copy of the famous addOn *_NPCSc
 There are two commands:<br/>
 **/unitscan** lists the active scan targets<br/>
 **/unitscan name** adds/removes **name** to/from the scan targets<br/>
+**/unitscanonce** toggle unitscan to notify only once per reload per target.
 When a target is detected it is removed and has to be readded to continue scanning for it.
