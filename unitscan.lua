@@ -21,6 +21,7 @@ local YELLOW = {1, 1, .15}
 local CHECK_INTERVAL = .1
 
 unitscan_targets = {}
+unitscan_notify_once = false
 local found = {}
 
 do
@@ -47,7 +48,9 @@ function unitscan.target(name)
 			unitscan.discovered_unit = name
 		end
 	else
-		found[name] = false
+		if not unitscan_notify_once then
+			found[name] = false
+		end
 	end
 end
 
@@ -302,11 +305,13 @@ function unitscan.toggle_target(name)
 		unitscan.print('- ' .. key)
 	elseif key ~= '' then
 		unitscan_targets[key] = true
+		found[key] = false
 		unitscan.print('+ ' .. key)
 	end
 end
 	
 SLASH_UNITSCAN1 = '/unitscan'
+SLASH_UNITSCAN1 = '/us'
 function SlashCmdList.UNITSCAN(parameter)
 	local _, _, name = strfind(parameter, '^%s*(.-)%s*$')
 	
@@ -316,5 +321,17 @@ function SlashCmdList.UNITSCAN(parameter)
 		end
 	else
 		unitscan.toggle_target(name)
+	end
+end
+
+SLASH_USO1 = '/uso'
+SLASH_USO2 = '/unitscanonce'
+function SlashCmdList.USO(parameter)
+	unitscan_notify_once = not unitscan_notify_once
+
+	if (unitscan_notify_once == true) then
+		unitscan.print('Unitscan will now notify only once per reload per target.')
+	else
+		unitscan.print('Unitscan will now always notify when the target is range.')
 	end
 end
