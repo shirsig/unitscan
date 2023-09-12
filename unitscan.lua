@@ -52,7 +52,6 @@ function unitscan.target(name)
 end
 
 function unitscan.LOAD()
-	UIParent:UnregisterEvent'ADDON_ACTION_FORBIDDEN'
 	do
 		local flash = CreateFrame'Frame'
 		unitscan.flash = flash
@@ -266,8 +265,15 @@ do
 		end
 		if GetTime() - unitscan.last_check >= CHECK_INTERVAL then
 			unitscan.last_check = GetTime()
+			local event_registered = UIParent:IsEventRegistered'ADDON_ACTION_FORBIDDEN'
+			if event_registered then
+				UIParent:UnregisterEvent'ADDON_ACTION_FORBIDDEN'
+			end
 			for name in pairs(unitscan_targets) do
 				unitscan.target(name)
+			end
+			if event_registered then
+				UIParent:RegisterEvent'ADDON_ACTION_FORBIDDEN'
 			end
 		end
 	end
