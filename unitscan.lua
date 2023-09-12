@@ -1,18 +1,24 @@
 local unitscan = CreateFrame'Frame'
 local forbidden
-unitscan:SetScript('OnUpdate', function() unitscan.UPDATE() end)
-unitscan:SetScript('OnEvent', function(_, event, arg1)
-	if event == 'ADDON_LOADED' and arg1 == 'unitscan' then
-		unitscan.LOAD()
-	elseif event == 'ADDON_ACTION_FORBIDDEN' and arg1 == 'unitscan' then
-		forbidden = true
+unitscan:SetScript('OnEvent', function(_, event, ...)
+	local arg = {...}
+	if event == 'PLAYER_ENTERING_WORLD' then
+		if arg[1] or arg[2] then
+			C_Timer.After(1, function()
+				unitscan.LOAD()
+			end)
+		end
+	elseif event == 'ADDON_ACTION_FORBIDDEN' then
+		if arg[1] == 'unitscan' then
+			forbidden = true
+		end
 	elseif event == 'PLAYER_TARGET_CHANGED' then
 		if UnitName'target' and strupper(UnitName'target') == unitscan.button:GetText() and not GetRaidTargetIndex'target' and (not IsInRaid() or UnitIsGroupAssistant'player' or UnitIsGroupLeader'player') then
 			SetRaidTarget('target', 4)
 		end
 	end
 end)
-unitscan:RegisterEvent'ADDON_LOADED'
+unitscan:RegisterEvent'PLAYER_ENTERING_WORLD'
 unitscan:RegisterEvent'ADDON_ACTION_FORBIDDEN'
 unitscan:RegisterEvent'PLAYER_TARGET_CHANGED'
 
@@ -53,6 +59,7 @@ end
 
 function unitscan.LOAD()
 	UIParent:UnregisterEvent'ADDON_ACTION_FORBIDDEN'
+	unitscan:SetScript('OnUpdate', function() unitscan.UPDATE() end)
 	do
 		local flash = CreateFrame'Frame'
 		unitscan.flash = flash
