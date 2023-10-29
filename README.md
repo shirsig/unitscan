@@ -6,7 +6,7 @@ This addOn automatically scans for any targetable units of your choice by name a
 
 The alert is visually and acoustically an exact copy of the famous addOn *_NPCScan* which first appeared during WotLK.
 
-There are two commands:<br/>
+There are three commands:<br/>
 **/unitscan** lists the active scan targets<br/>
 **/unitscan name** adds/removes **name** to/from the scan targets<br/>
-When a target is detected it is removed and has to be readded to continue scanning for it.
+**/unitscan name /X** adds **name** to the scan targets to use a custom sound. X can be value 1/2/3. Custom sounds can be replaced with out own versions, see "custom_sound_1/2/3.ogg" in the addon folder.<br/>
