@@ -18,7 +18,7 @@ unitscan:RegisterEvent'PLAYER_TARGET_CHANGED'
 
 local BROWN = {.7, .15, .05}
 local YELLOW = {1, 1, .15}
-local CHECK_INTERVAL = .1
+local SKIP_UPDATES = 3
 
 unitscan_targets = {}
 local found = {}
@@ -257,21 +257,24 @@ function unitscan.LOAD()
 end
 
 do
-	unitscan.last_check = GetTime()
+	local skip = 0
+	local target_name = nil
 	function unitscan.UPDATE()
 		if unitscan.discovered_unit and not InCombatLockdown() then
 			unitscan.button:set_target(unitscan.discovered_unit)
 			unitscan.discovered_unit = nil
 		end
-		if GetTime() - unitscan.last_check >= CHECK_INTERVAL then
-			unitscan.last_check = GetTime()
+		if skip > 0 then
+			skip = skip - 1
+		elseif next(unitscan_targets) then
+			target_name = next(unitscan_targets, target_name)
+			target_name = target_name or next(unitscan_targets)
+			skip = SKIP_UPDATES
 			local event_registered = UIParent:IsEventRegistered'ADDON_ACTION_FORBIDDEN'
 			if event_registered then
 				UIParent:UnregisterEvent'ADDON_ACTION_FORBIDDEN'
 			end
-			for name in pairs(unitscan_targets) do
-				unitscan.target(name)
-			end
+			unitscan.target(target_name)
 			if event_registered then
 				UIParent:RegisterEvent'ADDON_ACTION_FORBIDDEN'
 			end
