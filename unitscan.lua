@@ -280,6 +280,19 @@ do
 			end
 		end
 	end
+
+	function unitscan.toggle_target(name)
+		local key = strupper(name)
+		if unitscan_targets[key] then
+			unitscan_targets[key] = nil
+			found[key] = nil
+			unitscan.print('- ' .. key)
+		elseif key ~= '' then
+			unitscan_targets[key] = true
+			unitscan.print('+ ' .. key)
+		end
+		target_name = nil
+	end
 end
 
 function unitscan.print(msg)
@@ -295,18 +308,6 @@ function unitscan.sorted_targets()
 	end
 	sort(sorted_targets, function(key1, key2) return key1 < key2 end)
 	return sorted_targets
-end
-
-function unitscan.toggle_target(name)
-	local key = strupper(name)
-	if unitscan_targets[key] then
-		unitscan_targets[key] = nil
-		found[key] = nil
-		unitscan.print('- ' .. key)
-	elseif key ~= '' then
-		unitscan_targets[key] = true
-		unitscan.print('+ ' .. key)
-	end
 end
 	
 SLASH_UNITSCAN1 = '/unitscan'
