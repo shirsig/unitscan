@@ -267,8 +267,7 @@ do
 		if skip > 0 then
 			skip = skip - 1
 		elseif next(unitscan_targets) then
-			target_name = next(unitscan_targets, target_name)
-			target_name = target_name or next(unitscan_targets)
+			target_name = next(unitscan_targets, unitscan_targets[target_name] and target_name) or next(unitscan_targets)
 			skip = SKIP_UPDATES
 			local event_registered = UIParent:IsEventRegistered'ADDON_ACTION_FORBIDDEN'
 			if event_registered then
